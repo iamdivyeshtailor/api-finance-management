@@ -1,0 +1,22 @@
+const express = require('express');
+const router = express.Router();
+const {
+  getExpenses,
+  addExpense,
+  updateExpense,
+  deleteExpense
+} = require('../controllers/expenseController');
+
+// GET /api/expenses?month=M&year=Y — Get expenses filtered by month/year
+router.get('/', getExpenses);
+
+// POST /api/expenses — Add a new expense
+router.post('/', addExpense);
+
+// PUT /api/expenses/:id — Update an existing expense
+router.put('/:id', updateExpense);
+
+// DELETE /api/expenses/:id — Delete an expense
+router.delete('/:id', deleteExpense);
+
+module.exports = router;
