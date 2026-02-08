@@ -1,4 +1,5 @@
 const Expense = require('../models/Expense');
+const Settings = require('../models/Settings');
 
 // GET /api/expenses?month=M&year=Y
 const getExpenses = async (req, res, next) => {
@@ -68,9 +69,22 @@ const addExpense = async (req, res, next) => {
       throw error;
     }
 
-    // Extract month and year from date
-    const month = expenseDate.getMonth() + 1; // getMonth() is 0-based
-    const year = expenseDate.getFullYear();
+    // Determine budget month cycle based on salaryCreditDate
+    const settings = await Settings.findOne({});
+    const salaryCreditDate = settings ? settings.salaryCreditDate : 1;
+
+    const day = expenseDate.getDate();
+    let month = expenseDate.getMonth() + 1; // getMonth() is 0-based
+    let year = expenseDate.getFullYear();
+
+    if (day < salaryCreditDate) {
+      // Expense is before salary credit — belongs to previous month's cycle
+      month = month - 1;
+      if (month === 0) {
+        month = 12;
+        year = year - 1;
+      }
+    }
 
     const expense = await Expense.create({
       date: expenseDate,
@@ -109,8 +123,19 @@ const updateExpense = async (req, res, next) => {
         throw error;
       }
       expense.date = expenseDate;
-      expense.month = expenseDate.getMonth() + 1;
-      expense.year = expenseDate.getFullYear();
+
+      // Recalculate budget month cycle
+      const settings = await Settings.findOne({});
+      const salaryCreditDate = settings ? settings.salaryCreditDate : 1;
+      const day = expenseDate.getDate();
+      let m = expenseDate.getMonth() + 1;
+      let y = expenseDate.getFullYear();
+      if (day < salaryCreditDate) {
+        m = m - 1;
+        if (m === 0) { m = 12; y = y - 1; }
+      }
+      expense.month = m;
+      expense.year = y;
     }
 
     if (category) expense.category = category.trim();
