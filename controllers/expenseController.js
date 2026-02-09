@@ -27,7 +27,12 @@ const getExpenses = async (req, res, next) => {
 // POST /api/expenses
 const addExpense = async (req, res, next) => {
   try {
-    const { date, category, amount, description } = req.body;
+    const { date, category, amount, description, tags } = req.body;
+
+    // Normalize tags
+    const normalizedTags = Array.isArray(tags)
+      ? [...new Set(tags.map((t) => String(t).trim().toLowerCase()).filter(Boolean))].slice(0, 10)
+      : [];
 
     // Validate date
     if (!date) {
@@ -93,6 +98,7 @@ const addExpense = async (req, res, next) => {
       category: category.trim(),
       amount,
       description: description.trim(),
+      tags: normalizedTags,
       month,
       year
     });
@@ -114,7 +120,14 @@ const updateExpense = async (req, res, next) => {
       throw error;
     }
 
-    const { date, category, amount, description } = req.body;
+    const { date, category, amount, description, tags } = req.body;
+
+    // Update tags if provided
+    if (tags !== undefined) {
+      expense.tags = Array.isArray(tags)
+        ? [...new Set(tags.map((t) => String(t).trim().toLowerCase()).filter(Boolean))].slice(0, 10)
+        : [];
+    }
 
     // Update fields if provided
     if (date) {

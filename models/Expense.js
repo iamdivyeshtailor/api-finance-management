@@ -35,6 +35,14 @@ const expenseSchema = new mongoose.Schema({
   year: {
     type: Number,
     required: true
+  },
+  tags: {
+    type: [String],
+    default: [],
+    validate: {
+      validator: (v) => v.length <= 10 && v.every((t) => t.length <= 30),
+      message: 'Maximum 10 tags allowed, each up to 30 characters'
+    }
   }
 }, { timestamps: true });
 
@@ -43,5 +51,8 @@ expenseSchema.index({ userId: 1, month: 1, year: 1 });
 
 // Index for per-category aggregation within a user's month
 expenseSchema.index({ userId: 1, category: 1, month: 1, year: 1 });
+
+// Index for tag-based filtering within a user's month
+expenseSchema.index({ userId: 1, tags: 1, month: 1, year: 1 });
 
 module.exports = mongoose.model('Expense', expenseSchema);
