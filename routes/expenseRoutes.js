@@ -6,6 +6,7 @@ const {
   updateExpense,
   deleteExpense
 } = require('../controllers/expenseController');
+const { uploadMiddleware, parseStatement, saveBulkExpenses } = require('../controllers/importController');
 const { protect } = require('../middleware/auth');
 
 // All expense routes require authentication
@@ -16,6 +17,12 @@ router.get('/', getExpenses);
 
 // POST /api/expenses — Add a new expense
 router.post('/', addExpense);
+
+// POST /api/expenses/import/parse — Upload & parse bank statement
+router.post('/import/parse', uploadMiddleware, parseStatement);
+
+// POST /api/expenses/import/save — Bulk save confirmed transactions
+router.post('/import/save', saveBulkExpenses);
 
 // PUT /api/expenses/:id — Update an existing expense
 router.put('/:id', updateExpense);
