@@ -6,6 +6,10 @@ const {
   updateExpense,
   deleteExpense
 } = require('../controllers/expenseController');
+const { protect } = require('../middleware/auth');
+
+// All expense routes require authentication
+router.use(protect);
 
 // GET /api/expenses?month=M&year=Y — Get expenses filtered by month/year
 router.get('/', getExpenses);

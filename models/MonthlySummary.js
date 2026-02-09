@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const monthlySummarySchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'User ID is required']
+  },
   month: {
     type: Number,
     required: [true, 'Month is required'],
@@ -49,7 +54,7 @@ const monthlySummarySchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-// One summary per month — prevents duplicates
-monthlySummarySchema.index({ month: 1, year: 1 }, { unique: true });
+// One summary per user per month — prevents duplicates
+monthlySummarySchema.index({ userId: 1, month: 1, year: 1 }, { unique: true });
 
 module.exports = mongoose.model('MonthlySummary', monthlySummarySchema);

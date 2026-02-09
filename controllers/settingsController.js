@@ -3,7 +3,7 @@ const Settings = require('../models/Settings');
 // GET /api/settings
 const getSettings = async (req, res, next) => {
   try {
-    const settings = await Settings.findOne({});
+    const settings = await Settings.findOne({ userId: req.user.id });
 
     if (!settings) {
       return res.json({
@@ -55,10 +55,10 @@ const updateSettings = async (req, res, next) => {
       throw error;
     }
 
-    // Upsert: create if none exists, update if it does
+    // Upsert: create if none exists for this user, update if it does
     const settings = await Settings.findOneAndUpdate(
-      {},
-      { salary, salaryCreditDate, fixedDeductions, categories },
+      { userId: req.user.id },
+      { salary, salaryCreditDate, fixedDeductions, categories, userId: req.user.id },
       { new: true, upsert: true, runValidators: true }
     );
 

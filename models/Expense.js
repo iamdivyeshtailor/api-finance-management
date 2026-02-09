@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const expenseSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'User ID is required']
+  },
   date: {
     type: Date,
     required: [true, 'Date is required']
@@ -33,10 +38,10 @@ const expenseSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-// Index for fetching all expenses of a month
-expenseSchema.index({ month: 1, year: 1 });
+// Index for fetching all expenses of a user's month
+expenseSchema.index({ userId: 1, month: 1, year: 1 });
 
-// Index for per-category aggregation within a month
-expenseSchema.index({ category: 1, month: 1, year: 1 });
+// Index for per-category aggregation within a user's month
+expenseSchema.index({ userId: 1, category: 1, month: 1, year: 1 });
 
 module.exports = mongoose.model('Expense', expenseSchema);

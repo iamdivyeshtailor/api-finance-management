@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Settings = require('../models/Settings');
 const Expense = require('../models/Expense');
 const MonthlySummary = require('../models/MonthlySummary');
@@ -6,8 +7,10 @@ const { getCurrentMonthCycle } = require('../utils/dateHelpers');
 // GET /api/reports/current
 const getCurrentReport = async (req, res, next) => {
   try {
+    const userId = new mongoose.Types.ObjectId(req.user.id);
+
     // Fetch settings
-    const settings = await Settings.findOne({});
+    const settings = await Settings.findOne({ userId: req.user.id });
     if (!settings) {
       const error = new Error('Settings not configured. Please set up your budget first.');
       error.statusCode = 404;
@@ -27,7 +30,7 @@ const getCurrentReport = async (req, res, next) => {
 
     // Aggregate expenses by category for current month
     const expensesByCategory = await Expense.aggregate([
-      { $match: { month, year } },
+      { $match: { userId, month, year } },
       { $group: { _id: '$category', spent: { $sum: '$amount' } } }
     ]);
 
@@ -98,16 +101,17 @@ const getMonthlyReport = async (req, res, next) => {
 
     const m = Number(month);
     const y = Number(year);
+    const userId = new mongoose.Types.ObjectId(req.user.id);
 
     // Check if a stored summary already exists
-    let summary = await MonthlySummary.findOne({ month: m, year: y });
+    let summary = await MonthlySummary.findOne({ userId: req.user.id, month: m, year: y });
 
     if (summary) {
       return res.json(summary);
     }
 
     // No stored summary — compute from expenses + settings
-    const settings = await Settings.findOne({});
+    const settings = await Settings.findOne({ userId: req.user.id });
     if (!settings) {
       const error = new Error('Settings not configured. Please set up your budget first.');
       error.statusCode = 404;
@@ -120,7 +124,7 @@ const getMonthlyReport = async (req, res, next) => {
 
     // Aggregate expenses by category
     const expensesByCategory = await Expense.aggregate([
-      { $match: { month: m, year: y } },
+      { $match: { userId, month: m, year: y } },
       { $group: { _id: '$category', spent: { $sum: '$amount' } } }
     ]);
 
@@ -141,8 +145,9 @@ const getMonthlyReport = async (req, res, next) => {
 
     // Store the summary for future lookups
     summary = await MonthlySummary.findOneAndUpdate(
-      { month: m, year: y },
+      { userId: req.user.id, month: m, year: y },
       {
+        userId: req.user.id,
         salary: settings.salary,
         totalFixedDeductions,
         categoryBreakdown,
@@ -161,7 +166,7 @@ const getMonthlyReport = async (req, res, next) => {
 // GET /api/reports/history
 const getReportHistory = async (req, res, next) => {
   try {
-    const summaries = await MonthlySummary.find({})
+    const summaries = await MonthlySummary.find({ userId: req.user.id })
       .sort({ year: -1, month: -1 });
 
     res.json(summaries);

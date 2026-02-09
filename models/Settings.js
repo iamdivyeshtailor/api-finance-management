@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const settingsSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'User ID is required']
+  },
   salary: {
     type: Number,
     required: [true, 'Salary is required'],
@@ -52,5 +57,8 @@ const settingsSchema = new mongoose.Schema({
     }
   ]
 }, { timestamps: true });
+
+// One settings document per user
+settingsSchema.index({ userId: 1 }, { unique: true });
 
 module.exports = mongoose.model('Settings', settingsSchema);

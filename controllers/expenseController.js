@@ -13,6 +13,7 @@ const getExpenses = async (req, res, next) => {
     }
 
     const expenses = await Expense.find({
+      userId: req.user.id,
       month: Number(month),
       year: Number(year)
     }).sort({ date: -1 });
@@ -70,7 +71,7 @@ const addExpense = async (req, res, next) => {
     }
 
     // Determine budget month cycle based on salaryCreditDate
-    const settings = await Settings.findOne({});
+    const settings = await Settings.findOne({ userId: req.user.id });
     const salaryCreditDate = settings ? settings.salaryCreditDate : 1;
 
     const day = expenseDate.getDate();
@@ -87,6 +88,7 @@ const addExpense = async (req, res, next) => {
     }
 
     const expense = await Expense.create({
+      userId: req.user.id,
       date: expenseDate,
       category: category.trim(),
       amount,
@@ -104,7 +106,7 @@ const addExpense = async (req, res, next) => {
 // PUT /api/expenses/:id
 const updateExpense = async (req, res, next) => {
   try {
-    const expense = await Expense.findById(req.params.id);
+    const expense = await Expense.findOne({ _id: req.params.id, userId: req.user.id });
 
     if (!expense) {
       const error = new Error('Expense not found');
@@ -125,7 +127,7 @@ const updateExpense = async (req, res, next) => {
       expense.date = expenseDate;
 
       // Recalculate budget month cycle
-      const settings = await Settings.findOne({});
+      const settings = await Settings.findOne({ userId: req.user.id });
       const salaryCreditDate = settings ? settings.salaryCreditDate : 1;
       const day = expenseDate.getDate();
       let m = expenseDate.getMonth() + 1;
@@ -173,7 +175,7 @@ const updateExpense = async (req, res, next) => {
 // DELETE /api/expenses/:id
 const deleteExpense = async (req, res, next) => {
   try {
-    const expense = await Expense.findById(req.params.id);
+    const expense = await Expense.findOne({ _id: req.params.id, userId: req.user.id });
 
     if (!expense) {
       const error = new Error('Expense not found');

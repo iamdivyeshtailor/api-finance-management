@@ -5,6 +5,10 @@ const {
   getMonthlyReport,
   getReportHistory
 } = require('../controllers/reportController');
+const { protect } = require('../middleware/auth');
+
+// All report routes require authentication
+router.use(protect);
 
 // GET /api/reports/current — Live current month summary
 router.get('/current', getCurrentReport);
